@@ -18,15 +18,16 @@ package com.example.android.architecture.blueprints.todoapp.taskdetail;
 
 
 import android.app.Application;
-import android.arch.core.executor.testing.InstantTaskExecutorRule;
 import android.content.res.Resources;
 
+import com.example.android.architecture.blueprints.todoapp.Event;
+import com.example.android.architecture.blueprints.todoapp.LiveDataTestUtil;
 import com.example.android.architecture.blueprints.todoapp.R;
-import com.example.android.architecture.blueprints.todoapp.SnackbarMessage;
 import com.example.android.architecture.blueprints.todoapp.data.Task;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,6 +35,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -68,12 +71,6 @@ public class TaskDetailViewModelTest {
     @Mock
     private Application mContext;
 
-    @Mock
-    private TasksDataSource.GetTaskCallback mRepositoryCallback;
-
-    @Mock
-    private TasksDataSource.GetTaskCallback mViewModelCallback;
-
     @Captor
     private ArgumentCaptor<TasksDataSource.GetTaskCallback> mGetTaskCallbackCaptor;
 
@@ -92,7 +89,7 @@ public class TaskDetailViewModelTest {
         mTask = new Task(TITLE_TEST, DESCRIPTION_TEST);
 
         // Get a reference to the class under test
-        mTaskDetailViewModel = new TaskDetailViewModel(mContext, mTasksRepository);
+        mTaskDetailViewModel = new TaskDetailViewModel(mTasksRepository);
     }
 
     private void setupContext() {
@@ -107,8 +104,8 @@ public class TaskDetailViewModelTest {
         setupViewModelRepositoryCallback();
 
         // Then verify that the view was notified
-        assertEquals(mTaskDetailViewModel.task.get().getTitle(), mTask.getTitle());
-        assertEquals(mTaskDetailViewModel.task.get().getDescription(), mTask.getDescription());
+        assertEquals(mTaskDetailViewModel.getTask().getValue().getTitle(), mTask.getTitle());
+        assertEquals(mTaskDetailViewModel.getTask().getValue().getDescription(), mTask.getDescription());
     }
 
     @Test
@@ -123,36 +120,38 @@ public class TaskDetailViewModelTest {
     }
 
     @Test
-    public void completeTask() {
+    public void completeTask() throws InterruptedException {
         setupViewModelRepositoryCallback();
 
         // When the ViewModel is asked to complete the task
         mTaskDetailViewModel.setCompleted(true);
 
         // Then a request is sent to the task repository and the UI is updated
-        verify(mTasksRepository).completeTask(mTask);
-        assertThat(mTaskDetailViewModel.getSnackbarMessage().getValue(),
-                is(R.string.task_marked_complete));
+        Event<Integer> value = LiveDataTestUtil.getValue(mTaskDetailViewModel.getSnackbarMessage());
+        Assert.assertEquals(
+                (long) value.getContentIfNotHandled(),
+                R.string.task_marked_complete
+        );
     }
 
     @Test
-    public void activateTask() {
+    public void activateTask() throws InterruptedException {
         setupViewModelRepositoryCallback();
 
         // When the ViewModel is asked to complete the task
         mTaskDetailViewModel.setCompleted(false);
 
         // Then a request is sent to the task repository and the UI is updated
-        verify(mTasksRepository).activateTask(mTask);
-        assertThat(mTaskDetailViewModel.getSnackbarMessage().getValue(),
-                is(R.string.task_marked_active));
+        Event<Integer> value = LiveDataTestUtil.getValue(mTaskDetailViewModel.getSnackbarMessage());
+        Assert.assertEquals(
+                (long) value.getContentIfNotHandled(),
+                R.string.task_marked_active
+        );
     }
 
     @Test
-    public void TaskDetailViewModel_repositoryError() {
+    public void TaskDetailViewModel_repositoryError() throws InterruptedException {
         // Given an initialized ViewModel with an active task
-        mViewModelCallback = mock(TasksDataSource.GetTaskCallback.class);
-
         mTaskDetailViewModel.start(mTask.getId());
 
         // Use a captor to get a reference for the callback.
@@ -162,41 +161,30 @@ public class TaskDetailViewModelTest {
         mGetTaskCallbackCaptor.getValue().onDataNotAvailable(); // Trigger callback error
 
         // Then verify that data is not available
-        assertFalse(mTaskDetailViewModel.isDataAvailable());
+        assertFalse(LiveDataTestUtil.getValue(mTaskDetailViewModel.getIsDataAvailable()));
     }
 
     @Test
-    public void TaskDetailViewModel_repositoryNull() {
+    public void TaskDetailViewModel_repositoryNull() throws InterruptedException {
         setupViewModelRepositoryCallback();
 
         // When the repository returns a null task
         mGetTaskCallbackCaptor.getValue().onTaskLoaded(null); // Trigger callback error
 
         // Then verify that data is not available
-        assertFalse(mTaskDetailViewModel.isDataAvailable());
+        assertFalse(LiveDataTestUtil.getValue(mTaskDetailViewModel.getIsDataAvailable()));
 
         // Then task detail UI is shown
-        assertThat(mTaskDetailViewModel.task.get(), is(nullValue()));
+        assertThat(mTaskDetailViewModel.getTask().getValue(), is(nullValue()));
     }
 
     private void setupViewModelRepositoryCallback() {
         // Given an initialized ViewModel with an active task
-        mViewModelCallback = mock(TasksDataSource.GetTaskCallback.class);
-
         mTaskDetailViewModel.start(mTask.getId());
 
         // Use a captor to get a reference for the callback.
         verify(mTasksRepository).getTask(eq(mTask.getId()), mGetTaskCallbackCaptor.capture());
 
         mGetTaskCallbackCaptor.getValue().onTaskLoaded(mTask); // Trigger callback
-    }
-
-    @Test
-    public void updateSnackbar_nullValue() {
-        // Before setting the Snackbar text, get its current value
-        SnackbarMessage snackbarText = mTaskDetailViewModel.getSnackbarMessage();
-
-        // Check that the value is null
-        assertThat("Snackbar text does not match", snackbarText.getValue(), is(nullValue()));
     }
 }

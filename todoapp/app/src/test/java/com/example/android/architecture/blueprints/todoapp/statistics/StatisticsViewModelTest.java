@@ -17,9 +17,6 @@
 package com.example.android.architecture.blueprints.todoapp.statistics;
 
 
-import android.app.Application;
-import android.arch.core.executor.testing.InstantTaskExecutorRule;
-
 import com.example.android.architecture.blueprints.todoapp.data.Task;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
@@ -35,10 +32,11 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.List;
 
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 /**
@@ -67,7 +65,7 @@ public class StatisticsViewModelTest {
         MockitoAnnotations.initMocks(this);
 
         // Get a reference to the class under test
-        mStatisticsViewModel = new StatisticsViewModel(mock(Application.class), mTasksRepository);
+        mStatisticsViewModel = new StatisticsViewModel(mTasksRepository);
 
         // We initialise the tasks to 3, with one active and two completed
         TASKS = Lists.newArrayList(new Task("Title1", "Description1"),
@@ -87,7 +85,7 @@ public class StatisticsViewModelTest {
         mLoadTasksCallbackCaptor.getValue().onTasksLoaded(TASKS);
 
         // Then the results are empty
-        assertThat(mStatisticsViewModel.empty.get(), is(true));
+        assertThat(mStatisticsViewModel.getEmpty().getValue(), is(true));
     }
 
     @Test
@@ -100,7 +98,7 @@ public class StatisticsViewModelTest {
         mLoadTasksCallbackCaptor.getValue().onTasksLoaded(TASKS);
 
         // Then the results are empty
-        assertThat(mStatisticsViewModel.empty.get(), is(false));
+        assertThat(mStatisticsViewModel.getEmpty().getValue(), is(false));
     }
 
 
@@ -114,7 +112,7 @@ public class StatisticsViewModelTest {
         mLoadTasksCallbackCaptor.getValue().onDataNotAvailable();
 
         // Then an error message is shown
-        assertEquals(mStatisticsViewModel.empty.get(), true);
-        assertEquals(mStatisticsViewModel.error.get(), true);
+        assertEquals(mStatisticsViewModel.getEmpty().getValue(), true);
+        assertEquals(mStatisticsViewModel.getError().getValue(), true);
     }
 }

@@ -18,15 +18,16 @@ package com.example.android.architecture.blueprints.todoapp;
 
 import android.annotation.SuppressLint;
 import android.app.Application;
-import android.arch.lifecycle.ViewModel;
-import android.arch.lifecycle.ViewModelProvider;
-import android.support.annotation.VisibleForTesting;
 
 import com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTaskViewModel;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
 import com.example.android.architecture.blueprints.todoapp.statistics.StatisticsViewModel;
 import com.example.android.architecture.blueprints.todoapp.taskdetail.TaskDetailViewModel;
 import com.example.android.architecture.blueprints.todoapp.tasks.TasksViewModel;
+
+import androidx.annotation.VisibleForTesting;
+import androidx.lifecycle.ViewModel;
+import androidx.lifecycle.ViewModelProvider;
 
 /**
  * A creator is used to inject the product ID into the ViewModel
@@ -39,8 +40,6 @@ public class ViewModelFactory extends ViewModelProvider.NewInstanceFactory {
     @SuppressLint("StaticFieldLeak")
     private static volatile ViewModelFactory INSTANCE;
 
-    private final Application mApplication;
-
     private final TasksRepository mTasksRepository;
 
     public static ViewModelFactory getInstance(Application application) {
@@ -48,7 +47,7 @@ public class ViewModelFactory extends ViewModelProvider.NewInstanceFactory {
         if (INSTANCE == null) {
             synchronized (ViewModelFactory.class) {
                 if (INSTANCE == null) {
-                    INSTANCE = new ViewModelFactory(application,
+                    INSTANCE = new ViewModelFactory(
                             Injection.provideTasksRepository(application.getApplicationContext()));
                 }
             }
@@ -56,13 +55,16 @@ public class ViewModelFactory extends ViewModelProvider.NewInstanceFactory {
         return INSTANCE;
     }
 
+    public TasksRepository getTasksRepository() {
+        return mTasksRepository;
+    }
+
     @VisibleForTesting
     public static void destroyInstance() {
         INSTANCE = null;
     }
 
-    private ViewModelFactory(Application application, TasksRepository repository) {
-        mApplication = application;
+    private ViewModelFactory(TasksRepository repository) {
         mTasksRepository = repository;
     }
 
@@ -70,16 +72,16 @@ public class ViewModelFactory extends ViewModelProvider.NewInstanceFactory {
     public <T extends ViewModel> T create(Class<T> modelClass) {
         if (modelClass.isAssignableFrom(StatisticsViewModel.class)) {
             //noinspection unchecked
-            return (T) new StatisticsViewModel(mApplication, mTasksRepository);
+            return (T) new StatisticsViewModel(mTasksRepository);
         } else if (modelClass.isAssignableFrom(TaskDetailViewModel.class)) {
             //noinspection unchecked
-            return (T) new TaskDetailViewModel(mApplication, mTasksRepository);
+            return (T) new TaskDetailViewModel(mTasksRepository);
         } else if (modelClass.isAssignableFrom(AddEditTaskViewModel.class)) {
             //noinspection unchecked
-            return (T) new AddEditTaskViewModel(mApplication, mTasksRepository);
+            return (T) new AddEditTaskViewModel(mTasksRepository);
         } else if (modelClass.isAssignableFrom(TasksViewModel.class)) {
             //noinspection unchecked
-            return (T) new TasksViewModel(mApplication, mTasksRepository);
+            return (T) new TasksViewModel(mTasksRepository);
         }
         throw new IllegalArgumentException("Unknown ViewModel class: " + modelClass.getName());
     }
