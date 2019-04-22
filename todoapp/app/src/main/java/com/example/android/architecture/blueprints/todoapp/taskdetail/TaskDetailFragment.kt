@@ -18,9 +18,9 @@ package com.example.android.architecture.blueprints.todoapp.taskdetail
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import android.support.design.widget.FloatingActionButton
-import android.support.design.widget.Snackbar
-import android.support.v4.app.Fragment
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.snackbar.Snackbar
+import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -67,8 +67,9 @@ class TaskDetailFragment : Fragment(), TaskDetailContract.View {
         }
 
         // Set up floating action button
-        activity.findViewById<FloatingActionButton>(R.id.fab_edit_task)
-                .setOnClickListener { presenter.editTask() }
+        activity?.findViewById<FloatingActionButton>(R.id.fab_edit_task)?.setOnClickListener {
+            presenter.editTask()
+        }
 
         return root
     }
@@ -125,7 +126,7 @@ class TaskDetailFragment : Fragment(), TaskDetailContract.View {
     }
 
     override fun showTaskDeleted() {
-        activity.finish()
+        activity?.finish()
     }
 
     override fun showTaskMarkedComplete() {
@@ -140,7 +141,7 @@ class TaskDetailFragment : Fragment(), TaskDetailContract.View {
         if (requestCode == REQUEST_EDIT_TASK) {
             // If the task was edited successfully, go back to the list.
             if (resultCode == Activity.RESULT_OK) {
-                activity.finish()
+                activity?.finish()
             }
         }
     }

@@ -18,15 +18,15 @@ package com.example.android.architecture.blueprints.todoapp.addedittask
 
 import android.app.Activity
 import android.os.Bundle
-import android.support.design.widget.FloatingActionButton
-import android.support.design.widget.Snackbar
-import android.support.v4.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.fragment.app.Fragment
 import com.example.android.architecture.blueprints.todoapp.R
 import com.example.android.architecture.blueprints.todoapp.util.showSnackBar
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.snackbar.Snackbar
 
 /**
  * Main UI for the add task screen. Users can enter a task title and description.
@@ -48,7 +48,7 @@ class AddEditTaskFragment : Fragment(), AddEditTaskContract.View {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        with(activity.findViewById<FloatingActionButton>(R.id.fab_edit_task_done)) {
+        activity?.findViewById<FloatingActionButton>(R.id.fab_edit_task_done)?.apply {
             setImageResource(R.drawable.ic_done)
             setOnClickListener {
                 presenter.saveTask(title.text.toString(), description.text.toString())
@@ -72,7 +72,7 @@ class AddEditTaskFragment : Fragment(), AddEditTaskContract.View {
     }
 
     override fun showTasksList() {
-        with(activity) {
+        activity?.apply {
             setResult(Activity.RESULT_OK)
             finish()
         }
