@@ -16,8 +16,8 @@
 package com.example.android.architecture.blueprints.todoapp.statistics
 
 
-import android.app.Application
-import android.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import com.example.android.architecture.blueprints.todoapp.LiveDataTestUtil
 import com.example.android.architecture.blueprints.todoapp.data.Task
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository
@@ -32,7 +32,6 @@ import org.junit.Test
 import org.mockito.ArgumentCaptor
 import org.mockito.Captor
 import org.mockito.Mock
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations
 
@@ -55,7 +54,7 @@ class StatisticsViewModelTest {
         MockitoAnnotations.initMocks(this)
 
         // Get a reference to the class under test
-        statisticsViewModel = StatisticsViewModel(mock(Application::class.java), tasksRepository)
+        statisticsViewModel = StatisticsViewModel(tasksRepository)
 
         // We initialise the tasks to 3, with one active and two completed
         val task1 = Task("Title1", "Description1")
@@ -80,7 +79,7 @@ class StatisticsViewModelTest {
         loadTasksCallbackCaptor.value.onTasksLoaded(tasks)
 
         // Then the results are empty
-        assertThat(statisticsViewModel.empty.get(), `is`(true))
+        assertThat(LiveDataTestUtil.getValue(statisticsViewModel.empty), `is`(true))
     }
 
     @Test fun loadNonEmptyTasksFromRepository_NonEmptyResults() {
@@ -92,7 +91,7 @@ class StatisticsViewModelTest {
         loadTasksCallbackCaptor.value.onTasksLoaded(tasks)
 
         // Then the results are empty
-        assertThat(statisticsViewModel.empty.get(), `is`(false))
+        assertThat(LiveDataTestUtil.getValue(statisticsViewModel.empty), `is`(false))
     }
 
 
@@ -105,7 +104,7 @@ class StatisticsViewModelTest {
         loadTasksCallbackCaptor.value.onDataNotAvailable()
 
         // Then an error message is shown
-        assertEquals(statisticsViewModel.empty.get(), true)
-        assertEquals(statisticsViewModel.error.get(), true)
+        assertEquals(LiveDataTestUtil.getValue(statisticsViewModel.empty), true)
+        assertEquals(LiveDataTestUtil.getValue(statisticsViewModel.error), true)
     }
 }

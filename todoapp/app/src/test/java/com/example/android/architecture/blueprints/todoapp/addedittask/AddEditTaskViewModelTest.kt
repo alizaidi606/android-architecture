@@ -17,7 +17,8 @@ package com.example.android.architecture.blueprints.todoapp.addedittask
 
 
 import android.app.Application
-import android.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import com.example.android.architecture.blueprints.todoapp.LiveDataTestUtil
 import com.example.android.architecture.blueprints.todoapp.data.Task
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository
@@ -50,6 +51,7 @@ class AddEditTaskViewModelTest {
      */
     @Captor private lateinit var getTaskCallbackCaptor:
             ArgumentCaptor<TasksDataSource.GetTaskCallback>
+    @Captor private lateinit var saveTaskTaskCaptor: ArgumentCaptor<Task>
     private lateinit var addEditTaskViewModel: AddEditTaskViewModel
 
     @Before fun setupAddEditTaskViewModel() {
@@ -58,26 +60,28 @@ class AddEditTaskViewModelTest {
         MockitoAnnotations.initMocks(this)
 
         // Get a reference to the class under test
-        addEditTaskViewModel = AddEditTaskViewModel(mock<Application>(), tasksRepository)
+        addEditTaskViewModel = AddEditTaskViewModel(tasksRepository)
     }
 
     @Test fun saveNewTaskToRepository_showsSuccessMessageUi() {
         // When the ViewModel is asked to save a task
         with(addEditTaskViewModel) {
-            description.set("Some Task Description")
-            title.set("New Task Title")
+            description.value = "Some Task Description"
+            title.value = "New Task Title"
             saveTask()
         }
 
         // Then a task is saved in the repository and the view updated
-        verify<TasksRepository>(tasksRepository).saveTask(any<Task>())
+        verify(tasksRepository).saveTask(capture(saveTaskTaskCaptor))
+        assertThat(saveTaskTaskCaptor.value.title, `is`("New Task Title"))
+        assertThat(saveTaskTaskCaptor.value.description, `is`("Some Task Description"))
     }
 
     @Test fun populateTask_callsRepoAndUpdatesView() {
         val testTask = Task("TITLE", "DESCRIPTION", "1")
 
         // Get a reference to the class under test
-        addEditTaskViewModel = AddEditTaskViewModel(mock<Application>(), tasksRepository).apply {
+        addEditTaskViewModel = AddEditTaskViewModel(tasksRepository).apply {
             // When the ViewModel is asked to populate an existing task
             start(testTask.id)
         }
@@ -90,7 +94,9 @@ class AddEditTaskViewModelTest {
         getTaskCallbackCaptor.value.onTaskLoaded(testTask)
 
         // Verify the fields were updated
-        assertThat(addEditTaskViewModel.title.get(), `is`(testTask.title))
-        assertThat(addEditTaskViewModel.description.get(), `is`(testTask.description))
+        assertThat(
+            LiveDataTestUtil.getValue(addEditTaskViewModel.title), `is`(testTask.title))
+        assertThat(
+            LiveDataTestUtil.getValue(addEditTaskViewModel.description), `is`(testTask.description))
     }
 }
